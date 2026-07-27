@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CESNET S3 public object</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, sans-serif;
+    }
+
+    body {
+      margin: 2rem auto;
+      max-width: 60rem;
+      padding: 0 1rem;
+    }
+
+    iframe {
+      border: 1px solid currentColor;
+      box-sizing: border-box;
+      min-height: 20rem;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Public S3 object</h1>
+  <p>
+    If the preview does not appear,
+    <a id="public-link" rel="noopener noreferrer">open the public object directly</a>.
+  </p>
+  <iframe id="public-object" title="Public S3 object"></iframe>
+
+  <script>
+    const publicUrl =
+      "https://s3.cl4.du.cesnet.cz/32e8087b_6cd9_4cd6_95a4_8fce18348178:bucket101/uploaded_example/PUBLIC.md";
+
+    document.querySelector("#public-link").href = publicUrl;
+    document.querySelector("#public-object").src = publicUrl;
+  </script>
+</body>
+</html>
