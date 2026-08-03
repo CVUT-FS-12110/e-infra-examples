@@ -1,0 +1,97 @@
+#!/bin/bash
+#PBS -q default@pbs-m1.metacentrum.cz
+#PBS -l walltime=24:00:0
+#PBS -l select=1:ncpus=6:mem=3gb:scratch_local=2gb
+
+# the header is compulsory for PBS scripts, it is used to specify the resources needed for the job
+# to get familiar with the PBS syntax and available resources see 
+# https://metavo.metacentrum.cz/pbsmon2/qsub_pbspro
+
+#flag -q: no need to specify the queue, default is used
+#flag -l walltime: maximum time for the job to run, format is HH:MM:SS
+#flag -l select: number of nodes, number of cores per node, RAM memory, scratch memory
+
+# after submitting the job, it waits in the queue until the resources are available, then it is executed and a scratch directory is assigned to it
+# scratch is a space on the node's local disk, it allows for efficient I/O operations
+# it is not persistent, it should be deleted after the job finishes, so all results must be copied / moved back to the working directory
+
+# the folloing line appends information about the job to a file jobs_info.txt in the working directory, it is useful for debugging and tracking jobs
+# (if the job crashes, the file can be used to find out on which node it was running and in which scratch directory)
+# (if jobs_info.txt does not exist, it is created)
+echo "$PBS_JOBID is running on node `hostname -f` in a scratch directory $SCRATCHDIR" >> $PBS_O_WORKDIR/jobs_info.txt
+
+# SCRATCHDIR : the absolute path of the the scratch directory assigned to the job. 
+# PBS_O_WORKDIR : the absolute path of the current working directory of the qsub command.
+
+# example of how to load modules
+# load module                                if unavailable, print error and kill the job 
+# the numbers of exit are shown in the personal view
+# for the common exits see https://docs.metacentrum.cz/en/docs/computing/advanced#exit-status-interpretation
+# the numbers are arbitrary, you can use any number [1; 255] you want
+module load openfoam/2112-gcc-10.2.1-iwn4u5v || { echo >&2 "Wasn't able to load OF!"; exit 1; }
+module load gnuplot/5.4.3-gcc-10.2.1-enwslld || { echo >&2 "Wasn't able to load gnuplot!"; exit 1; }
+
+# careful! some of the modules are quite ... streamlined, compared to the classical builds,
+# e.g. the OpenFOAM module does not set the environment variables, so you need to do it manually, if you want to build your own applications, 
+source $FOAM_ETC/bashrc || { echo >&2 "Wasn't able to load OF!"; exit 1; }
+# if some of your applications / binaries are not in the PATH, you can add them manually, e.g.:
+export PATH=/storage/praha1/home/kreuzter/shared/Python-3.12.3/build/bin:$PATH
+
+# test if scratch directory is set
+# if scratch directory is not set, issue error message and exit
+test -n "$SCRATCHDIR" || { echo >&2 "Variable SCRATCHDIR is not set!"; exit 2; }
+
+# if your application writes temporary files, it is recommended to set the TMPDIR variable to the scratch directory, 
+# so that the temporary files are written there
+# the homes on the nodes are quite small, so writing temporary files there can lead to problems
+export TMPDIR=$SCRATCHDIR || { echo >&2 "Variable SCRATCHDIR is not set!"; exit 2; }
+
+# copy input files to scratch directory
+# the -L option is used to follow symbolic links, so that the actual files are copied, not the links
+# not neccessary this is just a personal preference (not breaking something by changing files outside of the scratch)
+cp -rL $PBS_O_WORKDIR/* $SCRATCHDIR || { echo >&2 "Error while copying input file(s)!"; exit 3; }
+
+# move into scratch directory
+cd $SCRATCHDIR || { echo >&2 "Error while copying input file(s)!"; exit 3; }
+
+# _______________________________________
+# run the actual job
+# I kept the actual commands in this script as an example, but I understand
+# that this part will strongly depend on the actual application and the way it is run
+
+# I typically put this to a separate script, e.g. run.sh
+# then I put just one line here, e.g. ./run.sh
+# good for local testing and readability 
+
+rm -r 0              || { echo "No 0 directories to remove.";} # but no exit if it fails, because the 0 directory doesn't have to exist
+cp -r orig.0 0       || { echo "Error while copying orig.0 to 0!"; exit 4; } # with exit, because now we would have no 0 directory, which is needed for the computation
+decomposePar &>> log || { echo "Error in decomposePar!"; exit 5; } 
+
+# run something using mpi
+mpirun -np 6 convLusgsFoam -parallel &>> log || { echo "Error in computation"; exit 10;}
+
+reconstructPar &>> log || { echo "Error in reconstructPar!"; exit 11; }
+
+# run gnuplot script to plot residua
+# notice that the gnuplot script is in the home directory, not in the scratch directory
+gnuplot /storage/brno2/home/kreuzter/scriptsAndSetups/gnuplotScripts/lusgs_residua.gp || { echo "Error plotting residua!"; } 
+# _______________________________________
+
+# moving results back to the working directory
+
+rm -r $PBS_O_WORKDIR/postProcessing || { echo >&2 "Wasn't able to remove postProcessing!"; } 
+mv postProcessing  $PBS_O_WORKDIR/  || { echo >&2 "Error while copying results!"; exit 12; }
+mv log             $PBS_O_WORKDIR/  || { echo >&2 "Error while copying results!"; exit 12; }
+mv [1-9]*          $PBS_O_WORKDIR/  || { echo >&2 "Error while copying results!"; exit 12; }
+mv *.png           $PBS_O_WORKDIR   || { echo >&2 "Wasn't able to move residua plot!";     }    
+
+# clean the SCRATCH directory
+clean_scratch
+
+# if the script is killed, the scratch directory is not cleaned, please clean it manually using info in the jobs_info.txt file:
+# if not cleaned, it will be cleaned automatically after some time, but untill then you are the ... who used the scratch for nothing, so please clean it!
+# before cleaning, you can copy copy some data from the scratch directory to your home directory, e.g. using scp or rsync
+
+# ssh <node>
+# cd <scratch directory>
+# rm -rf *
