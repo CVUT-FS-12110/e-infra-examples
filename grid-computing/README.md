@@ -2,21 +2,33 @@
 
 This example shows how to perform computations within Czech national computational grid.
 
+
+## Before you Start
+
+- You need to know your einfra `username` and `password`.
+- You have to choose frontend server https://docs.metacentrum.cz/en/docs/computing/infrastructure/frontends Frontend server is only way how to submit a task.
+
+Note: You can run interactive job to test it (it can take some time to connect): 
+> qsub -I -l walltime=0:30:00 \ -l select=1:ncpus=1:mem=1g:scratch_local=1
+
+
+
 ## Usage and Basic Concepts
 
-Prepare a computational setup, ideally a directory and run it using PBS script, see [an example](./run_script.pbs).
-The example script is heavily commented, all the comments **except the header** can be deleted, but for this repo it is kept as instructive as possible.
-
-Run the PBS script:
-```bash
-qsub run_script.pbs
-```
+1. Connect to frontend server via SSH `ssh <username>@<frontend>.metacentrum.cz`
+2. Prepare a computational setup, ideally a directory and run it using PBS script, see [an example](./run_script.pbs).
+   The example script is heavily commented, all the comments **except the header** can be deleted, but for this repo it is kept as instructive as possible.
+3. Place your task into a queue with PBS system 
+    by running the PBS script:
+    ```bash
+    qsub run_script.pbs
+    ```
 
 More PBS commands can be found [in the Metacentrum documentation](https://docs.metacentrum.cz/en/docs/computing/resources/pbs-commands).
 
 ## PBS Script Header
 
-The header is compulsory for PBS scripts; it specifies the resources needed for the job.
+The header is compulsory for PBS scripts; it replaces command line arguments and its specifies the resources needed for the job.
 
 ```bash
 #!/bin/bash
