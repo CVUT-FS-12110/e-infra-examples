@@ -5,13 +5,13 @@ This example shows how to perform computations within Czech national computation
 ## Before you Start
 
 - You need to know your einfra `username` and `password`.
-- You have to choose frontend server from a [list](https://docs.metacentrum.cz/en/docs/computing/infrastructure/frontends). Frontend server is only way how to submit a task.
+- You have to choose a frontend server from a [list](https://docs.metacentrum.cz/en/docs/computing/infrastructure/frontends). A frontend server is the only way to submit a task.
 
 ## Usage and Basic Concepts
 
 1. Connect to frontend server via SSH `ssh <username>@<frontend>.metacentrum.cz`. 
    
-   > You can use terminals availble via OnDemand (*Frontend shell*) if not working on linux and Putty is not your best friend. See [documentation](https://docs.metacentrum.cz/en/docs/graphical/ondemand).
+   > You can use terminals available via OnDemand (*Frontend shell*) if not working on Linux and PuTTY is not your best friend. See [documentation](https://docs.metacentrum.cz/en/docs/graphical/ondemand).
 
 2. Prepare a computational setup, ideally a directory and run it using PBS script, see `examples/`.
 3. Place your task into a queue with PBS system 
@@ -25,18 +25,18 @@ This example shows how to perform computations within Czech national computation
 > qsub -I -l walltime=0:30:00 \ -l select=1:ncpus=1:mem=1g:scratch_local=1
 > ```
 
-More PBS commands can be found [in the Metacentrum documentation](https://docs.metacentrum.cz/en/docs/computing/resources/pbs-commands).
+More PBS commands can be found [in the MetaCentrum documentation](https://docs.metacentrum.cz/en/docs/computing/resources/pbs-commands).
 
 ## PBS Script
 
-There are exaple `.pbs` scripts in the `examples/` dir. 
+There are example `.pbs` scripts in the `examples/` directory.
 - While the [01_very_simple_job.pbs](./examples/01_very_simple_job.pbs) is just a toy script, 
-- the [02_job_with_scratch.pbs](./examples/02_job_with_scratch.pbs) can be already used for something meaningful.
+- the [02_job_with_scratch.pbs](./examples/02_job_with_scratch.pbs) can already be used for something meaningful.
 - [03_run_script.pbs](./examples/03_run_script.pbs) additionally handles sourcing variables needed for advanced runs with some defaultly ripped off modules.
 
 ### Header
 
-The header is compulsory for PBS scripts; it replaces command line arguments and its specifies the resources needed for the job.
+The header is compulsory for PBS scripts; it replaces command line arguments and it specifies the resources needed for the job.
 
 ```bash
 #!/bin/bash
@@ -48,15 +48,15 @@ The PBS Directives available for Metacentrum can be explored via [Qsub assembler
 
 After submitting the job, it waits in the queue until resources are available, then it is assigned a scratch directory and executed.
 
-> **Example:** Appart from the header, the PBS script is just a usual bash script.
-> An overly simplified script is available as [01_very_simple_job.pbs](./examples/01_very_simple_job.pbs). It can be run safely from any directory as it just passively echos some info.
+> **Example:** Apart from the header, the PBS script is just a usual bash script.
+> An overly simplified script is available as [01_very_simple_job.pbs](./examples/01_very_simple_job.pbs). It can be run safely from any directory as it just passively echoes some info.
 
 ### Scratch Directory
 
 Scratch is space on the node's local disk, allowing efficient I/O operations. It is **not persistent** and should be cleaned after the job finishes (use `clean_scratch`). All results must be copied/moved back to the working directory before cleaning the scratch.
 
 > **Example:** [02_job_with_scratch.pbs](./examples/02_job_with_scratch.pbs) shows basic manipulation with data on the scratch.
-> Test the scratch directory is set, load a module, copy your data to the scratch, cd there, do your job, copy the results back to working directory.
+> Test that the scratch directory is set, load a module, copy your data to the scratch, cd there, do your job, copy the results back to working directory.
 
 ### Key Environment Variables
 
@@ -132,7 +132,7 @@ mpirun -np 6 convLusgsFoam -parallel &>> log
 reconstructPar &>> log                        
 ```
 
-The in the `.pbs` script, just call the separate scipt:
+Then in the `.pbs` script, just call the separate script:
 ```bash
 ./run.sh
 ```
