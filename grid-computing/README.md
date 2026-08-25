@@ -195,4 +195,6 @@ rm -rf *
 - Personal view: https://my.metacentrum.cz/
 - Qsub assembler: https://my.metacentrum.cz/qsub-assembler
 
+## GPU Computing
 
+- [Run PyTorch on a GPU using a Singularity container](./pytorch_gpu.md)
